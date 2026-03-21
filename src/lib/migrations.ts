@@ -495,6 +495,45 @@ const migrations: Migration[] = [
         CREATE INDEX IF NOT EXISTS idx_token_usage_model ON token_usage(model);
       `)
     }
+  },
+  {
+    id: '019_projects',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS projects (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          slug TEXT NOT NULL UNIQUE,
+          name TEXT NOT NULL,
+          purpose TEXT,
+          notes TEXT,
+          status TEXT NOT NULL DEFAULT 'active',
+          owner TEXT,
+          sprint TEXT,
+          priority_rank INTEGER NOT NULL UNIQUE,
+          created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+        );
+
+        CREATE TABLE IF NOT EXISTS project_links (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          project_id INTEGER NOT NULL,
+          type TEXT NOT NULL DEFAULT 'url',
+          label TEXT NOT NULL,
+          url TEXT,
+          local_path TEXT,
+          sort_order INTEGER NOT NULL DEFAULT 1,
+          created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
+        CREATE INDEX IF NOT EXISTS idx_projects_owner ON projects(owner);
+        CREATE INDEX IF NOT EXISTS idx_projects_sprint ON projects(sprint);
+        CREATE INDEX IF NOT EXISTS idx_projects_priority_rank ON projects(priority_rank);
+        CREATE INDEX IF NOT EXISTS idx_project_links_project_id ON project_links(project_id);
+        CREATE INDEX IF NOT EXISTS idx_project_links_sort_order ON project_links(project_id, sort_order);
+      `)
+    }
   }
 ]
 
