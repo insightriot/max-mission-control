@@ -73,9 +73,15 @@ export async function PUT(
     const db = getDatabase();
     const resolvedParams = await params;
     const taskId = parseInt(resolvedParams.id);
-    const validated = await validateBody(request, updateTaskSchema);
-    if ('error' in validated) return validated.error;
-    const body = validated.data;
+    // updateTaskSchema currently carries defaults from createTaskSchema; we must not
+    // apply defaults on partial updates or fields like status may reset.
+    const rawBody = await request.json().catch(() => null)
+    const parsed = updateTaskSchema.safeParse(rawBody)
+    if (!parsed.success) {
+      const details = parsed.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`)
+      return NextResponse.json({ error: 'Validation failed', details }, { status: 400 })
+    }
+    const body = parsed.data as any;
     
     if (isNaN(taskId)) {
       return NextResponse.json({ error: 'Invalid task ID' }, { status: 400 });
