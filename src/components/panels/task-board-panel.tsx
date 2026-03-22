@@ -456,7 +456,7 @@ function TaskDetailModal({
 
   useEffect(() => {
     setProjectId(task.project_id)
-  }, [task.project_id])
+  }, [task.id, task.project_id])
   const [comments, setComments] = useState<Comment[]>([])
   const [loadingComments, setLoadingComments] = useState(false)
   const [commentText, setCommentText] = useState('')
@@ -513,12 +513,17 @@ function TaskDetailModal({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.error || 'Failed to update project')
+
+      // Optimistically reflect the saved state immediately (avoids flicker/revert while parent refetches)
+      task.project_id = nextProjectId
       setProjectId(nextProjectId)
+
+      // Refresh task list
       onUpdate()
     } finally {
       setSavingProject(false)
     }
-  }, [task.id, onUpdate])
+  }, [task, onUpdate])
   
   useSmartPoll(fetchComments, 15000)
 
