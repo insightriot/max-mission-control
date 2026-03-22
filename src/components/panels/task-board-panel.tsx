@@ -453,6 +453,10 @@ function TaskDetailModal({
 }) {
   const [projectId, setProjectId] = useState<number | undefined>(task.project_id)
   const [savingProject, setSavingProject] = useState(false)
+
+  useEffect(() => {
+    setProjectId(task.project_id)
+  }, [task.project_id])
   const [comments, setComments] = useState<Comment[]>([])
   const [loadingComments, setLoadingComments] = useState(false)
   const [commentText, setCommentText] = useState('')
