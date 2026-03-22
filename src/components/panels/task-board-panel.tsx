@@ -58,10 +58,10 @@ const statusColumns = [
 ]
 
 const priorityColors = {
-  low: 'border-green-500',
-  medium: 'border-yellow-500',
-  high: 'border-orange-500',
-  urgent: 'border-red-500',
+  low: 'border-green-500/60',
+  medium: 'border-yellow-500/60',
+  high: 'border-orange-500/60',
+  urgent: 'border-red-500/60',
 }
 
 export function TaskBoardPanel() {
@@ -335,7 +335,7 @@ export function TaskBoardPanel() {
                   draggable
                   onDragStart={(e) => handleDragStart(e, task)}
                   onClick={() => setSelectedTask(task)}
-                  className={`bg-surface-1 rounded-lg p-3 cursor-pointer hover:bg-surface-2 transition-smooth border-l-4 ${priorityColors[task.priority]} ${
+                  className={`bg-surface-1 rounded-lg p-3 cursor-pointer hover:bg-surface-2 transition-smooth border ${priorityColors[task.priority]} ${
                     draggedTask?.id === task.id ? 'opacity-50' : ''
                   }`}
                 >
