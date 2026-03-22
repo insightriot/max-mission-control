@@ -32,6 +32,7 @@ export const createTaskSchema = z.object({
   status: z.enum(['inbox', 'assigned', 'in_progress', 'review', 'quality_review', 'done']).default('inbox'),
   priority: z.enum(['critical', 'high', 'medium', 'low']).default('medium'),
   assigned_to: z.string().max(100).optional(),
+  project_id: z.number().int().positive().optional(),
   created_by: z.string().max(100).optional(),
   due_date: z.number().optional(),
   estimated_hours: z.number().min(0).optional(),

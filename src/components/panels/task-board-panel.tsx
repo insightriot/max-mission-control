@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useMissionControl } from '@/store'
 import { useSmartPoll } from '@/lib/use-smart-poll'
+import { ProjectSelect } from '@/components/ui/project-select'
 
 interface Task {
   id: number
@@ -11,6 +12,7 @@ interface Task {
   status: 'inbox' | 'assigned' | 'in_progress' | 'review' | 'quality_review' | 'done'
   priority: 'low' | 'medium' | 'high' | 'urgent'
   assigned_to?: string
+  project_id?: number
   created_by: string
   created_at: number
   updated_at: number
@@ -449,6 +451,8 @@ function TaskDetailModal({
   onClose: () => void
   onUpdate: () => void
 }) {
+  const [projectId, setProjectId] = useState<number | undefined>(task.project_id)
+  const [savingProject, setSavingProject] = useState(false)
   const [comments, setComments] = useState<Comment[]>([])
   const [loadingComments, setLoadingComments] = useState(false)
   const [commentText, setCommentText] = useState('')
@@ -494,6 +498,23 @@ function TaskDetailModal({
   useEffect(() => {
     fetchReviews()
   }, [fetchReviews])
+
+  const saveProject = useCallback(async (nextProjectId?: number) => {
+    try {
+      setSavingProject(true)
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_id: nextProjectId ?? null })
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || 'Failed to update project')
+      setProjectId(nextProjectId)
+      onUpdate()
+    } finally {
+      setSavingProject(false)
+    }
+  }, [task.id, onUpdate])
   
   useSmartPoll(fetchComments, 15000)
 
@@ -612,6 +633,21 @@ function TaskDetailModal({
 
           {activeTab === 'details' && (
             <div className="grid grid-cols-2 gap-4 text-sm mt-4">
+              <div className="col-span-2">
+                <div className="text-muted-foreground text-xs mb-1">Project</div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <ProjectSelect value={projectId} onChange={(v) => setProjectId(v)} />
+                  </div>
+                  <button
+                    onClick={() => saveProject(projectId)}
+                    disabled={savingProject}
+                    className="px-3 py-2 bg-secondary text-muted-foreground rounded-md hover:bg-surface-2 transition-smooth text-xs font-medium disabled:opacity-60"
+                  >
+                    {savingProject ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+              </div>
               <div>
                 <span className="text-muted-foreground">Status:</span>
                 <span className="text-foreground ml-2">{task.status}</span>

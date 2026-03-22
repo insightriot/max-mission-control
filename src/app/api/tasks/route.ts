@@ -114,6 +114,7 @@ export async function POST(request: NextRequest) {
       status = 'inbox',
       priority = 'medium',
       assigned_to,
+      project_id,
       created_by = user?.username || 'system',
       due_date,
       estimated_hours,
@@ -131,9 +132,9 @@ export async function POST(request: NextRequest) {
     
     const stmt = db.prepare(`
       INSERT INTO tasks (
-        title, description, status, priority, assigned_to, created_by,
+        title, description, status, priority, assigned_to, project_id, created_by,
         created_at, updated_at, due_date, estimated_hours, tags, metadata
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
     const dbResult = stmt.run(
@@ -142,6 +143,7 @@ export async function POST(request: NextRequest) {
       status,
       priority,
       assigned_to,
+      project_id,
       created_by,
       now,
       now,
@@ -158,7 +160,8 @@ export async function POST(request: NextRequest) {
       title,
       status,
       priority,
-      assigned_to
+      assigned_to,
+      project_id
     });
 
     if (created_by) {

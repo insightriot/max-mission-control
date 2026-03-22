@@ -94,6 +94,7 @@ export async function PUT(
       status,
       priority,
       assigned_to,
+      project_id,
       due_date,
       estimated_hours,
       actual_hours,
@@ -132,6 +133,14 @@ export async function PUT(
     if (assigned_to !== undefined) {
       fieldsToUpdate.push('assigned_to = ?');
       updateParams.push(assigned_to);
+    }
+    if (project_id !== undefined) {
+      if (project_id === null) {
+        fieldsToUpdate.push('project_id = NULL');
+      } else {
+        fieldsToUpdate.push('project_id = ?');
+        updateParams.push(project_id);
+      }
     }
     if (due_date !== undefined) {
       fieldsToUpdate.push('due_date = ?');

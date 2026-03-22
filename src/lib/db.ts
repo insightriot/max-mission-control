@@ -110,6 +110,7 @@ export interface Task {
   status: 'inbox' | 'assigned' | 'in_progress' | 'review' | 'quality_review' | 'done';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   assigned_to?: string;
+  project_id?: number;
   created_by: string;
   created_at: number;
   updated_at: number;

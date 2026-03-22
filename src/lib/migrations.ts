@@ -534,6 +534,18 @@ const migrations: Migration[] = [
         CREATE INDEX IF NOT EXISTS idx_project_links_sort_order ON project_links(project_id, sort_order);
       `)
     }
+  },
+  {
+    id: '020_tasks_project_id',
+    up: (db) => {
+      // Idempotent: only add column if missing (SQLite has no IF NOT EXISTS for ADD COLUMN)
+      const cols = db.prepare(`PRAGMA table_info(tasks)`).all() as Array<{ name: string }>
+      const has = cols.some((c) => c.name === 'project_id')
+      if (!has) {
+        db.exec(`ALTER TABLE tasks ADD COLUMN project_id INTEGER;`)
+      }
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id);`)
+    }
   }
 ]
 
