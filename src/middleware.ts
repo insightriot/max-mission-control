@@ -91,8 +91,14 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Allow login page, auth API, and docs without session
-  if (pathname === '/login' || pathname.startsWith('/api/auth/') || pathname === '/api/docs' || pathname === '/docs') {
+  // Allow login page, auth API, docs, and health endpoint without session
+  if (
+    pathname === '/login' ||
+    pathname.startsWith('/api/auth/') ||
+    pathname === '/api/docs' ||
+    pathname === '/docs' ||
+    pathname === '/api/health'
+  ) {
     return applySecurityHeaders(NextResponse.next())
   }
 
