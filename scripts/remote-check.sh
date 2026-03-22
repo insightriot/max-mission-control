@@ -38,7 +38,7 @@ fi
 # 2) remote gateway UI must be reachable over Tailscale Serve (HTTP 200)
 
 note "Checking OpenClaw gateway WebSocket upgrade locally (http://127.0.0.1:18789/ws)"
-LOCAL_WS_LINE=$(curl -sS -i --max-time 8 \
+LOCAL_WS_LINE=$(curl -sS -i --max-time 2 \
   -H 'Connection: Upgrade' \
   -H 'Upgrade: websocket' \
   -H 'Sec-WebSocket-Version: 13' \
