@@ -454,9 +454,36 @@ function TaskDetailModal({
   const [projectId, setProjectId] = useState<number | undefined>(task.project_id)
   const [savingProject, setSavingProject] = useState(false)
 
+  // Editable fields (explicit save)
+  const [title, setTitle] = useState(task.title)
+  const [description, setDescription] = useState(task.description || '')
+  const [status, setStatus] = useState<Task['status']>(task.status)
+  const [priority, setPriority] = useState<Task['priority']>(task.priority)
+  const [assignedTo, setAssignedTo] = useState<string>(task.assigned_to || '')
+  const [dueDate, setDueDate] = useState<string>(() => {
+    if (!task.due_date) return ''
+    const d = new Date(task.due_date * 1000)
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+  })
+  const [estimatedHours, setEstimatedHours] = useState<string>(() => (task.estimated_hours ?? '') as any)
+
+  const [savingDetails, setSavingDetails] = useState(false)
+  const [detailError, setDetailError] = useState<string | null>(null)
+
   useEffect(() => {
     setProjectId(task.project_id)
-  }, [task.id, task.project_id])
+    setTitle(task.title)
+    setDescription(task.description || '')
+    setStatus(task.status)
+    setPriority(task.priority)
+    setAssignedTo(task.assigned_to || '')
+    setDueDate(() => {
+      if (!task.due_date) return ''
+      const d = new Date(task.due_date * 1000)
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+    })
+    setEstimatedHours((task.estimated_hours ?? '') as any)
+  }, [task.id, task.project_id, task.title, task.description, task.status, task.priority, task.assigned_to, task.due_date, task.estimated_hours])
   const [comments, setComments] = useState<Comment[]>([])
   const [loadingComments, setLoadingComments] = useState(false)
   const [commentText, setCommentText] = useState('')
@@ -524,6 +551,52 @@ function TaskDetailModal({
       setSavingProject(false)
     }
   }, [task, onUpdate])
+
+  const saveDetails = useCallback(async () => {
+    try {
+      setSavingDetails(true)
+      setDetailError(null)
+
+      const due_date = dueDate ? Math.floor(new Date(`${dueDate}T00:00:00`).getTime() / 1000) : null
+      const estimated_hours = estimatedHours === '' ? null : Number(estimatedHours)
+      if (estimated_hours !== null && Number.isNaN(estimated_hours)) {
+        throw new Error('Estimated hours must be a number')
+      }
+
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title.trim(),
+          description,
+          status,
+          priority,
+          assigned_to: assignedTo || null,
+          project_id: projectId ?? null,
+          due_date,
+          estimated_hours
+        })
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || 'Failed to update task')
+
+      // Optimistically update the object backing this modal so UI doesn't snap back
+      task.title = title.trim()
+      task.description = description
+      task.status = status
+      task.priority = priority
+      task.assigned_to = assignedTo || undefined
+      task.project_id = projectId
+      task.due_date = due_date === null ? undefined : due_date
+      task.estimated_hours = estimated_hours === null ? undefined : estimated_hours
+
+      onUpdate()
+    } catch (e: any) {
+      setDetailError(e?.message || 'Failed to update task')
+    } finally {
+      setSavingDetails(false)
+    }
+  }, [assignedTo, description, dueDate, estimatedHours, onUpdate, priority, projectId, status, task, title])
   
   useSmartPoll(fetchComments, 15000)
 
@@ -616,8 +689,15 @@ function TaskDetailModal({
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-card border border-border rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
-          <div className="flex justify-between items-start mb-4">
-            <h3 className="text-xl font-bold text-foreground">{task.title}</h3>
+          <div className="flex justify-between items-start mb-4 gap-4">
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-muted-foreground">Task #{task.id}</div>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full bg-transparent text-xl font-bold text-foreground focus:outline-none border-b border-transparent focus:border-border/60"
+              />
+            </div>
             <button
               onClick={onClose}
               className="text-muted-foreground hover:text-foreground text-2xl transition-smooth"
@@ -625,7 +705,13 @@ function TaskDetailModal({
               ×
             </button>
           </div>
-          <p className="text-foreground/80 mb-4">{task.description || 'No description'}</p>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full bg-surface-1 text-foreground border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 mb-4"
+            rows={4}
+            placeholder="Describe the task…"
+          />
           <div className="flex gap-2 mt-4">
             {(['details', 'comments', 'quality'] as const).map(tab => (
               <button
@@ -641,37 +727,124 @@ function TaskDetailModal({
           </div>
 
           {activeTab === 'details' && (
-            <div className="grid grid-cols-2 gap-4 text-sm mt-4">
-              <div className="col-span-2">
-                <div className="text-muted-foreground text-xs mb-1">Project</div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1">
-                    <ProjectSelect value={projectId} onChange={(v) => setProjectId(v)} />
-                  </div>
-                  <button
-                    onClick={() => saveProject(projectId)}
-                    disabled={savingProject}
-                    className="px-3 py-2 bg-secondary text-muted-foreground rounded-md hover:bg-surface-2 transition-smooth text-xs font-medium disabled:opacity-60"
-                  >
-                    {savingProject ? 'Saving…' : 'Save'}
-                  </button>
+            <div className="mt-4 space-y-4">
+              {detailError && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-2 rounded-md text-sm">
+                  {detailError}
                 </div>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Status:</span>
-                <span className="text-foreground ml-2">{task.status}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Priority:</span>
-                <span className="text-foreground ml-2">{task.priority}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Assigned to:</span>
-                <span className="text-foreground ml-2">{task.assigned_to || 'Unassigned'}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Created:</span>
-                <span className="text-foreground ml-2">{new Date(task.created_at * 1000).toLocaleDateString()}</span>
+              )}
+
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="col-span-2">
+                  <div className="text-muted-foreground text-xs mb-1">Project</div>
+                  <ProjectSelect value={projectId} onChange={(v) => setProjectId(v)} />
+                </div>
+
+                <div>
+                  <div className="text-muted-foreground text-xs mb-1">Status</div>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as Task['status'])}
+                    className="w-full bg-surface-1 text-foreground border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  >
+                    <option value="inbox">Inbox</option>
+                    <option value="assigned">Assigned</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="review">Review</option>
+                    <option value="quality_review">Quality Review</option>
+                    <option value="done">Done</option>
+                  </select>
+                </div>
+
+                <div>
+                  <div className="text-muted-foreground text-xs mb-1">Priority</div>
+                  <select
+                    value={priority}
+                    onChange={(e) => setPriority(e.target.value as Task['priority'])}
+                    className="w-full bg-surface-1 text-foreground border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+
+                <div>
+                  <div className="text-muted-foreground text-xs mb-1">Assigned To</div>
+                  <select
+                    value={assignedTo}
+                    onChange={(e) => setAssignedTo(e.target.value)}
+                    className="w-full bg-surface-1 text-foreground border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  >
+                    <option value="">Unassigned</option>
+                    {agents.map((a) => (
+                      <option key={a.name} value={a.name}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <div className="text-muted-foreground text-xs mb-1">Due Date</div>
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="w-full bg-surface-1 text-foreground border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  />
+                </div>
+
+                <div>
+                  <div className="text-muted-foreground text-xs mb-1">Estimated Hours</div>
+                  <input
+                    type="number"
+                    step="0.25"
+                    value={estimatedHours}
+                    onChange={(e) => setEstimatedHours(e.target.value)}
+                    className="w-full bg-surface-1 text-foreground border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
+                    placeholder="e.g. 2"
+                  />
+                </div>
+
+                <div className="col-span-2 flex items-center justify-between">
+                  <div className="text-xs text-muted-foreground">
+                    Created {new Date(task.created_at * 1000).toLocaleDateString()}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        // reset fields to current task values
+                        setProjectId(task.project_id)
+                        setTitle(task.title)
+                        setDescription(task.description || '')
+                        setStatus(task.status)
+                        setPriority(task.priority)
+                        setAssignedTo(task.assigned_to || '')
+                        setDueDate(() => {
+                          if (!task.due_date) return ''
+                          const d = new Date(task.due_date * 1000)
+                          return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+                        })
+                        setEstimatedHours((task.estimated_hours ?? '') as any)
+                        setDetailError(null)
+                      }}
+                      className="px-3 py-2 bg-secondary text-muted-foreground rounded-md hover:bg-surface-2 transition-smooth text-xs font-medium"
+                      type="button"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={saveDetails}
+                      disabled={savingDetails}
+                      className="px-3 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-smooth text-xs font-medium disabled:opacity-60"
+                      type="button"
+                    >
+                      {savingDetails ? 'Saving…' : 'Save Changes'}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
