@@ -496,7 +496,7 @@ function TaskDetailModal({
   const [reviewNotes, setReviewNotes] = useState('')
   const [reviewError, setReviewError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'details' | 'comments' | 'quality'>('details')
-  const [reviewer, setReviewer] = useState('aegis')
+  const [reviewer, setReviewer] = useState('admin')
 
   const fetchReviews = useCallback(async () => {
     try {

@@ -9,7 +9,7 @@ import { validateBody, updateTaskSchema } from '@/lib/validation';
 function hasAegisApproval(db: ReturnType<typeof getDatabase>, taskId: number): boolean {
   const review = db.prepare(`
     SELECT status FROM quality_reviews
-    WHERE task_id = ? AND reviewer = 'aegis'
+    WHERE task_id = ? AND reviewer = 'admin'
     ORDER BY created_at DESC
     LIMIT 1
   `).get(taskId) as { status?: string } | undefined
@@ -125,7 +125,7 @@ export async function PUT(
     if (status !== undefined) {
       if (status === 'done' && !hasAegisApproval(db, taskId)) {
         return NextResponse.json(
-          { error: 'Aegis approval is required to move task to done.' },
+          { error: 'Admin approval is required to move task to done.' },
           { status: 403 }
         )
       }
