@@ -1,0 +1,35 @@
+agent_zone_checksum: 01db2681ee3cbb89b2fee8db6dbff40421f4ff6312e383a52138f180d3397518
+contributes_to_confident: []
+drift_callout: "Declared `state: active` but no commits in over 90 days \u2014 this project\
+  \ looks dormant. Consider flipping `state:` to `paused` in portfolio.yaml or restarting\
+  \ work."
+generated_at: '2026-05-11T20:29:27Z'
+inputs:
+- sha256: 271ae715e7eb73ef06f970d3eba558b53edb022336e515e2d628b63fa6062152
+  source: daily_log
+- sha256: ce65bbc52929d2153d4c904c0840490484ad919bd2c5abff196260c25b674990
+  source: git_log
+- sha256: ac7b1474d6a7f14fede24a0e2b9ceb7de6ce9d297aa4329bfc2bb2e3484afe03
+  source: planning
+- sha256: c762de59c88a9a98a57e1eb3909d8450af8721309063d8c1dfbb274b49b4bc9c
+  source: portfolio
+- sha256: 12394bccce9eb81c89f013baba447a9c3e63a1d2154d65988935ae35f81edb34
+  source: readme
+llm:
+  max_tokens: 4096
+  model: claude-sonnet-4-6
+  prompt_template_version: 2026-05-11a
+  schema_keys:
+  - blockers
+  - current_sprint
+  - decision_rules
+  - deferred
+  - focus
+  - links
+  - next_actions
+  temperature: 0.0
+project_id: max-mission-control
+redactions: []
+state_declared: active
+state_observed: dormant
+version: 1
