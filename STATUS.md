@@ -1,47 +1,20 @@
 ---
-# ============================================================================
-# MACHINE ZONE — agents write, humans don't edit by hand.
-# Maintained by the deducer (Phase 2) on bootstrap and the compiler
-# (Phase 3+) on subsequent reconciliations.
-#
-# Schema reference: CONVENTIONS.md → "STATUS.md schema" section.
-#
-# Placeholder syntax:
-#   - "{{name}}" tokens in quoted scalar fields are filled by the renderer
-#     using the project's portfolio.yaml entry, recent git activity, and
-#     linked goal candidates.
-#   - List fields (depends_on, related_to, used_by, blocks, contributes_to)
-#     are seeded as [] and the renderer rewrites the full line from
-#     portfolio.yaml + goal-candidate cross-references.
-#   - last_human_update is intentionally absent at bootstrap. It is set by
-#     the human reviewer when accepting/refining a deducer draft and is
-#     never written by the deducer. The deducer's human-edit detection
-#     rule treats its presence as one signal that the prose middle has
-#     been touched (see CONVENTIONS.md → human-edit detection).
-# ============================================================================
-
-version: 1                          # STATUS.md schema version
-
-project: "max-mission-control"           # matches portfolio.yaml id
-parent: "brett"            # venture id
-kind: "infrastructure"                    # product | infrastructure | utility | archive
-state: "active"                  # active | maintenance | paused | shipped | killed
-lifecycle: "maintain"          # exploration | validation | build | ship | maintain | continuous
-
-# Cross-project edges — copied verbatim from portfolio.yaml at render time.
-depends_on: []
-related_to: []
-used_by: []
+activity_signal: quiet
 blocks: []
-
-# Goal linkage — confident matches use the {venture, target} object form;
-# ambiguous candidates surface as {status: tbd, question: "..."} entries
-# for the review pass to resolve rather than hide.
 contributes_to: []
-
-# Activity-related fields (last_agent_update, activity_signal,
-# days_since_last_commit, metrics, delta) are intentionally absent at
-# bootstrap — Phase 3's compiler is the sole writer.
+days_since_last_commit: 4
+delta: aligned
+depends_on: []
+drift_callout: null
+kind: infrastructure
+last_agent_update: '2026-05-15T23:58:08Z'
+lifecycle: maintain
+parent: brett
+project: max-mission-control
+related_to: []
+state: active
+used_by: []
+version: 1
 ---
 
 # STATUS — max-mission-control
