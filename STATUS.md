@@ -2,12 +2,12 @@
 activity_signal: quiet
 blocks: []
 contributes_to: []
-days_since_last_commit: 14
+days_since_last_commit: 15
 delta: aligned
 depends_on: []
 drift_callout: null
 kind: infrastructure
-last_agent_update: '2026-05-26T13:51:17Z'
+last_agent_update: '2026-05-27T14:24:06Z'
 lifecycle: maintain
 parent: brett
 project: max-mission-control
