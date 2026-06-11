@@ -1,13 +1,13 @@
 ---
-activity_signal: quiet
+activity_signal: dormant
 blocks: []
 contributes_to: []
-days_since_last_commit: 29
-delta: aligned
+days_since_last_commit: null
+delta: drift
 depends_on: []
-drift_callout: null
+drift_callout: 'Declared `state: active` but no commits in over 90 days — this project looks dormant. Consider flipping `state:` to `paused` in portfolio.yaml or restarting work.'
 kind: infrastructure
-last_agent_update: '2026-06-10T14:20:36Z'
+last_agent_update: '2026-06-11T14:33:45Z'
 lifecycle: maintain
 parent: brett
 project: max-mission-control
